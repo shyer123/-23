@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大学生心理疏导</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      #container {
+        width: 100%;
+        max-width: 660px;
+        padding: 10px;
+        margin: 0 10px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+      }
+
+      input[type='text'] {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+      .rep {
+        text-align: right;
+      }
+      button {
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      #conversation {
+        margin: 10px 0px;
+        padding: 0 10px;
+        background-color: #f9f9f9;
+
+        border-radius: 5px;
+        min-height: 300px;
+        overflow-y: auto;
+      }
+
+      .message {
+        margin-bottom: 10px;
+      }
+
+      .user-message {
+        text-align: right;
+        color: #007bff;
+      }
+
+      .virtual-character-message {
+        text-align: left;
+        color: #333;
+      }
+
+      #sendBtn {
+        display: none;
+      }
+      .send-btn {
+        float: right;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="container">
+      <h1>大学生心理疏导系统</h1>
+      <div id="authentication">
+        <label for="student_id">请输入你的学号：</label>
+        <input type="text" id="student_id" name="student_id" />
+        <button onclick="authenticateStudent()">认证</button>
+      </div>
+
+      <div id="virtual-character" style="display: none">
+        <h2 id="select-tips">选择你的虚拟形象</h2>
+        <select id="character">
+          <option value="匿名用户">匿名用户</option>
+          <option value="知心学姐">知心学姐</option>
+          <option value="成熟学长">成熟学长</option>
+          <option value="温柔学妹">温柔学妹</option>
+          <option value="阳光学弟">阳光学弟</option>
+          <option value="长者">长者</option>
+        </select>
+        <br /><br />
+        <button id="start" onclick="startCommunication()">开始沟通</button>
+
+        <div id="sendBtn">
+          <div id="conversation"></div>
+          <input type="text" id="user_input" placeholder="请输入你的烦恼" />
+          <button onclick="sendMessage()" class="send-btn">发送</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var virtualCharacter
+      var studentId
+      var conversationDiv = document.getElementById('conversation')
+      const students = [
+        202114400103, 202114400230, 202114400306, 202114400308, 202114400313, 202114400318, 202114400323, 202114400329,
+        202114400330, 202114400407, 202114400413, 202114400416, 202114400421, 202114400423, 202114400424, 202114400428,
+        202114400512, 202114400524, 202114400526, 202114400610, 202114400612, 202114400620, 202114400630, 202114400703,
+
+        202114400706, 202114400721, 202114400724, 202114400120, 202114400128, 202114400209, 202114400210, 202114400216,
+        202114400222, 202114400327, 202114400414, 202114400420, 202114400429, 202114400511, 202114400514, 202114400520,
+        202114400525, 202114400528, 202114400529, 202114400605, 202114400606, 202114400615, 202114400619, 202114400627,
+
+        202114400628, 202114400629, 202114400705, 202114400726, 202114400104, 202114400107, 202114400112, 202114400118,
+        202114400121, 202114400124, 202114400130, 202114400208, 202114400214, 202114400217, 202114400303, 202114400316,
+        202114400317, 202114400320, 202114400326, 202114400401, 202114400409, 202114400417, 202114400419, 202114400501,
+
+        202114400503, 202114400507, 202114400609, 202114400611, 202114400616, 202114400623, 202114400714, 202114400717,
+        202114400719, 202114400723, 202114400102, 202114400110, 202114400111, 202114400119, 202114400123, 202114400125,
+        202114400127, 202114400201, 202114400204, 202114400211, 202114400220, 202114400225, 202114400228, 202114400315,
+
+        202114400322, 202114400408, 202114400410, 202114400425, 202114400506, 202114400513, 202114400518, 202114400522,
+        202114400527, 202114400604, 202114400608, 202114400626, 202114400707, 202114400710, 202114400712, 202114400730,
+        202114400101, 202114400105, 202114400108, 202114400113, 202114400114, 202114400115, 202114400129, 202114400202,
+
+        202114400206, 202114400219, 202114400221, 202114400224, 202114400226, 202114400227, 202114400311, 202114400324,
+        202114400412, 202114400418, 202114400430, 202114400523, 202114400613, 202114400622, 202114400625, 202114400709,
+        202114400718, 202114400720, 202114400722, 202114400727, 202114400728, 202114400729, 202114410308, 202114400109,
+
+        202114400117, 202114400122, 202114400126, 202114400212, 202114400213, 202114400223, 202114400301, 202114400304,
+        202114400310, 202114400312, 202114400403, 202114400415, 202114400422, 202114400426, 202114400509, 202114400510,
+        202114400515, 202114400530, 202114400607, 202114400614, 202114400617, 202114400618, 202114400624,
+
+        202114400701, 202114400711, 202114400713, 202114400715, 202114400725, 202114410518
+      ]
+
+      function authenticateStudent() {
+        studentId = document.getElementById('student_id').value
+        var password = students.indexOf(Number(studentId)) > -1
+        if (password) {
+          document.getElementById('authentication').style.display = 'none'
+          document.getElementById('virtual-character').style.display = 'block'
+        } else {
+          alert('该学生未认证')
+        }
+      }
+
+      function startCommunication() {
+        var character = document.getElementById('character').value
+        virtualCharacter = character
+        document.getElementById('start').style.display = 'none'
+        document.getElementById('select-tips').style.display = 'none'
+        document.getElementById('sendBtn').style.display = 'block'
+
+        conversationDiv.innerHTML +=
+          '<p class="virtual-character-message">' + virtualCharacter + '：你好，怎么了，有什么想和我说的吗？</p>'
+      }
+
+      function sendMessage() {
+        var userInput = document.getElementById('user_input').value
+        var character = document.getElementById('character').value
+
+        if (userInput !== '') {
+          conversationDiv.innerHTML +=
+            '<div class="rep"> <span class="user-message">' +
+            character +
+            '：</span><span class="user-message">' +
+            userInput +
+            '</span></div>'
+          // 模拟虚拟形象的回复
+          var response = generateResponse(userInput)
+
+          // 进行危险等级判定并根据等级做出相应处理
+          var dangerLevel = assessDangerLevel(userInput)
+          handleDangerLevel(dangerLevel)
+
+          conversationDiv.innerHTML += '<p class="virtual-character-message">' + '系统' + '：' + response + '</p>'
+          // 清空输入框
+          document.getElementById('user_input').value = ''
+        }
+      }
+
+      function assessDangerLevel(input) {
+        // 简单示例：根据用户输入内容进行危险等级判定
+        if (input.includes('自杀') || input.includes('自残')) {
+          return 'red'
+        } else if (input.includes('心理问题')) {
+          return 'yellow'
+        } else {
+          return 'green'
+        }
+      }
+
+      function handleDangerLevel(level) {
+        let text = ''
+        switch (level) {
+          case 'red':
+            // 显示警告信息在对话框中
+            text = virtualCharacter + '：你的言论存在自杀或自残倾向，请及时寻求帮助！校心理疏导：(0315) 880 5976'
+            // 进行校方报告等操作
+            alert(text)
+            break
+          case 'yellow':
+            // 显示提示信息在对话框中
+            text = virtualCharacter + '：你的言论表明存在心理问题，我们会安排心理老师为你进行疏导！'
+            // 进行心理疏导等操作
+            console.log(text)
+            break
+          case 'green':
+            // 显示提示信息在对话框中
+            text = virtualCharacter + '：你的言论表明目前心理状态正常，如果还有其他困扰，可以继续与我们沟通！'
+            // 继续沟通等操作
+            console.log(text)
+            break
+          default:
+            break
+        }
+      }
+
+      function generateResponse(input) {
+        // 在这里根据用户输入生成虚拟形象的回复
+        // 根据不同的用户输入，生成不同的回复
+        if (input.includes('对啊')) {
+          return '哪方面的困扰呢？'
+        } else if (input.includes('考研压力')) {
+          return '最近有感觉到头疼，身体不舒服吗？'
+        } else if (input.includes('没有啊')) {
+          return '没关系的，考研只是一种选择，不要把它看得太重要。人生有很多选择，每一条路都可能适合你。'
+        } else if (input.includes('人生太失败了')) {
+          return '别这样想啊，只是现在的挫折比较多，失恋了这并不是你的问题，只是双方经过一段时间的相处发现不合适，成为了彼此人生中的过客，而这样的经历在你的人生中还有很多次，把它当成一种旅程，每一次都可以遇见不同的自己，人生，还是有很多美好的事，有很多美好的风景等着你去看的，而你说的考研失败工作不顺利这只是生活给你的提醒，是时候考虑一下自己是不是真的适合目前的专业呢，想一下自己真的想去做什么擅长什么，然后迈开步子，大胆去做。'
+        } else if (input.includes('失恋')) {
+          return '失恋并不是你的错，只是一段经历而已。感受到失败是正常的，但不要因此贬低自己。'
+        } else if (input.includes('失败')) {
+          return '考研失败并不代表你的人生失败。或许这是一个重新审视自己的机会，找到更适合自己的方向。'
+        } else {
+          return '嗯，我了解了，有什么需要我帮忙的吗？'
+        }
+      }
+
+      // 虚拟形象问怎么了，感觉很累吗，我回答对啊，然后他接着问，哪方面的困扰呢，我说考研压力很大让我感觉很难受，虚拟形象再继续说最近有感觉到头疼，身体不舒服吗，我回答没有啊，就是心情很不好，虚拟形象再说，没关系的，考研只是一种选择不要把它看得太重要，人生有很多选择的，每一条路都可能适合你，我说，谢谢你
+
+      // 虚拟形象问最近压力大吗，我回答，有点，然后他说是哪里出了问题啊，我回答我失恋了再加上考研失败工作也没找到，我感觉看不见希望，我的人生太失败了。虚拟形象回答，别这样想啊，只是现在的挫折比较多，失恋了这并不是你的问题，只是双方经过一段时间的相处发现不合适，成为了彼此人生中的过客，而这样的经历在你的人生中还有很多次，把它当成一种旅程，每一次都可以遇见不同的自己，人生，还是有很多美好的事，有很多美好的风景等着你去看的，而你说的考研失败工作不顺利这只是生活给你的提醒，是时候考虑一下自己是不是真的适合目前的专业呢，想一下自己真的想去做什么擅长什么，然后迈开步子，大胆去做。我说，道理我都懂可是我还是很难受，感觉特别失败。虚拟形象在后台联系校方此人红色预警，然后回复难受只会是一时的，你总会想开的，我相信你。
+    </script>
+  </body>
+</html>
